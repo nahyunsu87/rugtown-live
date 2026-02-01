@@ -100,3 +100,14 @@ small {
   z-index: 1;
   position: relative;
 }
+
+/* ✅ hidden 속성을 확실히 적용 (display:grid가 덮어쓰는 문제 해결) */
+#parentPanel[hidden] {
+  display: none !important;
+}
+
+/* ✅ 패널이 캔버스 위로 오고 클릭/터치 받게 */
+#parentPanel {
+  z-index: 9999;
+  pointer-events: auto;
+}
