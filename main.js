@@ -57,10 +57,22 @@
   parentBtn.addEventListener('pointerup', cancelPress);
   parentBtn.addEventListener('pointercancel', cancelPress);
   parentBtn.addEventListener('pointerleave', cancelPress);
-  closeParent.addEventListener('click', () => (parentPanel.hidden = true));
-  parentPanel.addEventListener('click', (e) => {
-    if (e.target === parentPanel) parentPanel.hidden = true;
-  });
+function hideParentPanel() {
+  parentPanel.hidden = true;
+}
+
+closeParent.addEventListener('click', hideParentPanel);
+closeParent.addEventListener('pointerup', hideParentPanel);
+closeParent.addEventListener('touchend', hideParentPanel, { passive: true });
+
+function onPanelBg(e) {
+  if (e.target === parentPanel) hideParentPanel();
+}
+
+parentPanel.addEventListener('click', onPanelBg);
+parentPanel.addEventListener('pointerup', onPanelBg);
+parentPanel.addEventListener('touchend', onPanelBg, { passive: true });
+
 
   // ====== 오디오(파일 없이 간단 톤) ======
   let audioCtx = null;
