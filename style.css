@@ -80,3 +80,23 @@ small {
   opacity: 0.75;
   margin-top: 8px;
 }
+/* =========================
+   iOS + hidden 패널 버그 수정
+   ========================= */
+
+/* hidden 속성일 때는 무조건 안 보이게 (CSS가 display:grid 덮어쓰는 문제 해결) */
+#parentPanel[hidden] {
+  display: none !important;
+}
+
+/* 패널이 항상 캔버스 위에 올라오고 터치 받도록 */
+#parentPanel {
+  z-index: 9999;
+  pointer-events: auto;
+}
+
+/* 캔버스는 아래 레이어 */
+#game {
+  z-index: 1;
+  position: relative;
+}
