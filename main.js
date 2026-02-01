@@ -93,6 +93,30 @@ parentPanel.addEventListener('touchend', onPanelBg, { passive: true });
       // ignore
     }
   }
+  function siren(type = 'police') {
+  if (!settings.sound) return;
+  // 짧고 귀에 거슬리지 않게 0.7초 내외
+  const seq =
+    type === 'fire'
+      ? [660, 520, 660, 520, 780]           // 소방 느낌
+      : type === 'med'
+      ? [880, 988, 880, 988, 740]           // 앰뷸런스 느낌
+      : [740, 880, 740, 880, 660];          // 경찰 느낌
+
+  let i = 0;
+  const id = setInterval(() => {
+    beep(seq[i % seq.length], 0.06, 'square', 0.03);
+    i++;
+    if (i >= 9) clearInterval(id);
+  }, 80);
+}
+
+function dispatchChime() {
+  // 출동 “띵!”
+  beep(1040, 0.06, 'triangle', 0.04);
+  beep(1320, 0.07, 'triangle', 0.035);
+}
+
 
   // ====== 리사이즈 & 월드->스크린 변환 ======
   const view = {
@@ -340,6 +364,11 @@ parentPanel.addEventListener('touchend', onPanelBg, { passive: true });
     };
 
     currentEvent.sfx?.();
+    // 사건 타입별 “출동 준비” 소리
+if (type === EventType.THIEF) siren('police');
+else if (type === EventType.FIRE) siren('fire');
+else siren('med');
+
   }
 
   // ====== 드래그 경로(아이 손가락) ======
@@ -479,10 +508,15 @@ parentPanel.addEventListener('touchend', onPanelBg, { passive: true });
     if(currentEvent && currentEvent.state === 'dragging'){
       const ok = withinPoi(currentEvent.target, w.x, w.y);
       if(ok){
-        currentEvent.state = 'resolving';
-        beginVehicle(currentEvent.station, currentEvent);
-        beep(1320, 0.07, 'sine', 0.05);
-      } else {
+  currentEvent.state = 'resolving';
+  beginVehicle(currentEvent.station, currentEvent);
+
+  dispatchChime();
+  if (currentEvent.type === EventType.THIEF) siren('police');
+  else if (currentEvent.type === EventType.FIRE) siren('fire');
+  else siren('med');
+}
+else {
         // 실패 패널티 없음: 다시 대기 상태로
         currentEvent.state = 'waiting';
         dragPath = [];
@@ -538,6 +572,31 @@ parentPanel.addEventListener('touchend', onPanelBg, { passive: true });
     ctx.drawImage(rugImg, 0,0, RUG_SIZE, RUG_SIZE);
     ctx.restore();
   }
+function drawDimOverlay(strength = 0.45) {
+  ctx.save();
+  ctx.fillStyle = `rgba(0,0,0,${strength})`;
+  ctx.fillRect(0, 0, view.w, view.h);
+  ctx.restore();
+}
+
+// 딤 위에 “스포트라이트 구멍” 내기 (station/target 주변이 밝게 보임)
+function spotlight(worldX, worldY, worldR, feather = 1.25) {
+  const s = worldToScreen(worldX, worldY);
+  const r = worldR * view.scale;
+
+  ctx.save();
+  ctx.globalCompositeOperation = 'destination-out';
+
+  const grad = ctx.createRadialGradient(s.x, s.y, r * 0.15, s.x, s.y, r * feather);
+  grad.addColorStop(0, 'rgba(0,0,0,0.95)');
+  grad.addColorStop(1, 'rgba(0,0,0,0.0)');
+
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(s.x, s.y, r * feather, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
 
   function ring(x,y, radius, t, color='rgba(255,255,255,0.9)'){
     const s = worldToScreen(x,y);
@@ -552,15 +611,26 @@ parentPanel.addEventListener('touchend', onPanelBg, { passive: true });
     ctx.restore();
   }
 
-  function drawEmoji(x,y, emoji, size=40){
-    const s = worldToScreen(x,y);
-    ctx.save();
-    ctx.font = `${Math.floor(size*view.scale)}px system-ui, Apple Color Emoji, Segoe UI Emoji`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(emoji, s.x, s.y);
-    ctx.restore();
-  }
+  function drawEmoji(x, y, emoji, size = 40, pulse = 0) {
+  const s = worldToScreen(x, y);
+  const pxSize = Math.floor(size * view.scale * (1 + 0.06 * Math.sin(pulse)));
+
+  ctx.save();
+  ctx.font = `${pxSize}px system-ui, Apple Color Emoji, Segoe UI Emoji`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // 외곽/그림자(배경에서 분리)
+  ctx.shadowColor = 'rgba(0,0,0,0.75)';
+  ctx.shadowBlur = 14 * view.scale;
+  ctx.shadowOffsetY = 3 * view.scale;
+
+  // 살짝 밝은 “글로우” 느낌
+  ctx.globalAlpha = 1.0;
+  ctx.fillText(emoji, s.x, s.y);
+  ctx.restore();
+}
+
 
   function drawDragPath(){
     if(!dragging || dragPath.length < 2) return;
