@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>러그타운 라이브</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="wrap">
+    <canvas id="game" aria-label="러그타운 라이브 게임"></canvas>
+
+    <!-- 상단 우측: 보호자용(길게 누르면 열림) -->
+    <button id="parentBtn" title="보호자 설정(길게 누르기)" aria-label="보호자 설정">
+      ⚙️
+    </button>
+
+    <!-- 보호자 패널(텍스트는 보호자만) -->
+    <div id="parentPanel" hidden>
+      <div class="panel">
+        <div class="row">
+          <span>사건 빈도</span>
+          <input id="freq" type="range" min="4" max="14" step="1" value="8" />
+        </div>
+        <div class="row">
+          <span>도로 엄격</span>
+          <input id="strict" type="range" min="0" max="1" step="0.05" value="0.55" />
+        </div>
+        <div class="row">
+          <span>소리</span>
+          <input id="sound" type="checkbox" checked />
+        </div>
+        <div class="row">
+          <button id="closeParent">닫기</button>
+        </div>
+        <small>※ 아이는 글을 안 읽어도 됩니다. (설정은 보호자용)
+        </small>
+      </div>
+    </div>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>
